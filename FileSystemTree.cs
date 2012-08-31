@@ -45,7 +45,7 @@ namespace MyLibrary
 			public static FileSystemTree GetDiferent(FileSystemTree first, FileSystemTree second)
 			{
 //				FileSystemTree returnFileSystemTreeDiferent = new FileSystemTree();
-				return first;
+				return null;
 			}
 		}
 	}
