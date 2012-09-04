@@ -50,6 +50,12 @@ namespace MyLibrary
 				set { _children = (IDictionary<string,FileSystemTreeNode>)value; }
 			}
 
+			public FileSystemTreeNode Parent
+			{
+				set { _parent = value; }
+				get { return _parent; }
+			}
+
 			public void AddNode(FileSystemTreeNode newNode)
 			{
 				newNode._parent = this;
