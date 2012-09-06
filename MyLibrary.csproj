@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileSystem.cs" />
     <Compile Include="FileSystemTree.cs" />
     <Compile Include="FileSystemTreeNode.cs" />
     <Compile Include="PathCombine.cs" />

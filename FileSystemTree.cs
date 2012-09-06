@@ -35,32 +35,89 @@ namespace MyLibrary
 				}
 			}
 
-			FileSystemTree GetDiferent(FileSystemTree otherTree, int flags)
+			FileSystemTree GetDiferent(FileSystemTree otherTree, Diferent flags)
 			{
 				if (_root.Info.FullName != otherTree._root.Info.FullName)
 				{
 					return this;
 				}
-
+				FileSystemTree returnTree = new FileSystemTree(_root.Info.FullName)
+												{_root = GetDiferent(_root, otherTree._root, flags)};
+				return returnTree;
 			}
 
 			FileSystemTreeNode GetDiferent(FileSystemTreeNode thisTreeNode, FileSystemTreeNode otherTreeNode, Diferent flags)
 			{
-				if (thisTreeNode.Info.FullName != otherTreeNode.Info.FullName)
-					return thisTreeNode;
-				FileSystemTreeNode returnTreeNode = new FileSystemTreeNode( thisTreeNode.Info.FullName, thisTreeNode.Parent );
-				foreach (var childThisNode in thisTreeNode.Children)
+				FileSystemTreeNode returnNode = null;
+				bool isDid = false;
+				if (otherTreeNode == null)
 				{
-					if (otherTreeNode.Children[childThisNode.Key] != null)
+					if (flags.HasFlag(Diferent.Deleted))
 					{
-						if (flags.HasFlag(Diferent.LastModified))
-							if (childThisNode.Value.Info.LastWriteTime > otherTreeNode.Children[childThisNode.Key].Info.LastWriteTime)
-								returnTreeNode.Children.Add( childThisNode.Key, childThisNode.Value );
-							else
-								returnTreeNode.Children.Add(childThisNode.Key, otherTreeNode.Children[childThisNode.Key]);
-
+						return new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+						isDid = true;
+					}
+					else
+					{
+						throw new Exception("otherTreeNode == null");
 					}
 				}
+				if (thisTreeNode == null)
+				{
+					if (flags.HasFlag(Diferent.LastCreated))
+					{
+						return returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						isDid = true;
+					}
+					else 
+						throw new Exception("ThisTreeNode == null");
+				}
+				returnNode = new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+				foreach (var child in thisTreeNode.Children)
+				{
+					FileSystemTreeNode tempNode = GetDiferent(child.Value, otherTreeNode.Children[child.Key], flags);
+					if (tempNode != null)
+						returnNode.AddNode(tempNode);
+				}
+				if (returnNode.Children.Count == 0)
+					returnNode = null;
+				else
+				{
+					isDid = true;
+				}
+				if (flags.HasFlag(Diferent.Deleted) && !isDid)
+					if (!File.Exists(otherTreeNode.Info.FullName) && (!Directory.Exists(otherTreeNode.Info.FullName)))
+					{
+						returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						isDid = true;
+					}
+				if (flags.HasFlag(Diferent.LastModified) && !isDid)
+				{
+					if (thisTreeNode.Info.LastWriteTime > otherTreeNode.Info.LastWriteTime)
+					{
+						returnNode = new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+						isDid = true;
+					}
+					else if (thisTreeNode.Info.LastWriteTime < otherTreeNode.Info.LastWriteTime)
+					{
+						returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						isDid = true;
+					}
+				}
+				if (flags.HasFlag(Diferent.LastCreated) && !isDid)
+				{
+					if (thisTreeNode.Info.CreationTime > otherTreeNode.Info.CreationTime)
+					{
+						returnNode = new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+						isDid = true;
+					}
+					else if (thisTreeNode.Info.CreationTime < otherTreeNode.Info.CreationTime)
+					{
+						returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						isDid = true;
+					}
+				}
+				return returnNode;
 			}
 
 			public static FileSystemTree GetFileSystemTree(string root)
@@ -71,15 +128,15 @@ namespace MyLibrary
 			}
 
 			[Flags]
-			enum Diferent
+			public enum Diferent
 			{
 				None = 0,
 				LastModified = 0x02,
-				LastCreate = 0x04,
-
+				LastCreated = 0x04,
+				Deleted = 0x06
 			}
 
-			public static FileSystemTree GetDiferent(FileSystemTree first, FileSystemTree second, int flags  )
+			public static FileSystemTree GetDiferent(FileSystemTree first, FileSystemTree second, Diferent flags  )
 			{
 				FileSystemTree returnTree = new FileSystemTree( first._root.Info.FullName );
 
