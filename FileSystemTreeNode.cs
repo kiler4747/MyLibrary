@@ -11,37 +11,44 @@ namespace MyLibrary
 
 		class FileSystemTreeNode
 		{
-			private FileSystemInfo _info;
-			private IDictionary<string,FileSystemTreeNode> _children;
+			private string _name;
+			private IDictionary<string, FileSystemTreeNode> _children;
 			private FileSystemTreeNode _parent;
 
 			private FileSystemTreeNode()
 			{
-				_info = null;
+				_name = null;
 				_children = new Dictionary<string, FileSystemTreeNode>();
 				_parent = null;
 			}
 
-			public FileSystemTreeNode(string path, FileSystemTreeNode parent)
+			public FileSystemTreeNode(string name, FileSystemTreeNode parent = null)
 				: this()
 			{
-				if (File.Exists(path))
-					_info = new FileInfo(path);
-				else if (Directory.Exists(path))
+				int indexSeparator = name.IndexOf(PathCombine.Separator);
+				if (indexSeparator >= 0)
 				{
-					_info = new DirectoryInfo(path);
+					AddNode(name.Substring(indexSeparator + 1));
+					_name = name.Substring(0, indexSeparator - 1);
 				}
 				else
 				{
-					throw new Exception("Неверно задан путь к файлу/папке");
+					_name = name;
 				}
 				_parent = parent;
 			}
 
-			public FileSystemInfo Info
+			public FileSystemTreeNode(FileSystemTreeNode node)
 			{
-				get { return _info; }
-				set { _info = value; }
+				_name = node.Name;
+				_children = new Dictionary<string, FileSystemTreeNode>(node.Children);
+				_parent = new FileSystemTreeNode(node.Parent);
+			}
+
+			public string Name
+			{
+				get { return _name; }
+				set { _name = value; }
 			}
 
 			public IDictionary<string,FileSystemTreeNode> Children
@@ -56,13 +63,39 @@ namespace MyLibrary
 				get { return _parent; }
 			}
 
+			public void AddNode(IEnumerable<string> newNodes )
+			{
+				foreach (var newNode in newNodes)
+				{
+					AddNode(newNode);
+				}
+			}
+
+			public void AddNode(IEnumerable<FileSystemTreeNode> newNodes)
+			{
+				foreach (var newNode in newNodes)
+				{
+					AddNode(newNode);
+				}
+			}
+
+			public void AddNode(string newNode)
+			{
+				AddNode(new FileSystemTreeNode(newNode));
+			}
+
 			public void AddNode(FileSystemTreeNode newNode)
 			{
 				newNode._parent = this;
-				_children.Add(newNode.Info.Name,newNode);
+				_children.Add(newNode.Name,newNode);
 			}
 
-
+			public string GetPath()
+			{
+				if (_parent == null)
+					return Name;
+				return _parent.GetPath() + PathCombine.Separator + Name;
+			}
 		}
 }
 }

@@ -21,14 +21,14 @@ namespace MyLibrary
 
 			void CreateTree(FileSystemTreeNode rootNode)
 			{
-				IEnumerable<string> dirs = Directory.EnumerateDirectories(rootNode.Info.FullName);
+				IEnumerable<string> dirs = Directory.EnumerateDirectories(rootNode.Name);
 				foreach (var dir in dirs)
 				{
 					var dirTempNode = new FileSystemTreeNode( dir, rootNode );
 					rootNode.AddNode(dirTempNode);
 					CreateTree(dirTempNode);
 				}
-				IEnumerable<string> files = Directory.EnumerateFiles(rootNode.Info.FullName);
+				IEnumerable<string> files = Directory.EnumerateFiles(rootNode.Name);
 				foreach (var file in files)
 				{
 					rootNode.AddNode(new FileSystemTreeNode(file, rootNode));
@@ -37,11 +37,11 @@ namespace MyLibrary
 
 			FileSystemTree GetDiferent(FileSystemTree otherTree, Diferent flags)
 			{
-				if (_root.Info.FullName != otherTree._root.Info.FullName)
+				if (_root.Name != otherTree._root.Name)
 				{
 					return this;
 				}
-				FileSystemTree returnTree = new FileSystemTree(_root.Info.FullName)
+				FileSystemTree returnTree = new FileSystemTree(_root.Name)
 												{_root = GetDiferent(_root, otherTree._root, flags)};
 				return returnTree;
 			}
@@ -54,7 +54,7 @@ namespace MyLibrary
 				{
 					if (flags.HasFlag(Diferent.Deleted))
 					{
-						return new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+						return new FileSystemTreeNode(thisTreeNode.Name.FullName, null);
 						isDid = true;
 					}
 					else
@@ -66,13 +66,13 @@ namespace MyLibrary
 				{
 					if (flags.HasFlag(Diferent.LastCreated))
 					{
-						return returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						return returnNode = new FileSystemTreeNode(otherTreeNode.Name.FullName, null);
 						isDid = true;
 					}
 					else 
 						throw new Exception("ThisTreeNode == null");
 				}
-				returnNode = new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+				returnNode = new FileSystemTreeNode(thisTreeNode.Name.FullName, null);
 				foreach (var child in thisTreeNode.Children)
 				{
 					FileSystemTreeNode tempNode = GetDiferent(child.Value, otherTreeNode.Children[child.Key], flags);
@@ -86,34 +86,34 @@ namespace MyLibrary
 					isDid = true;
 				}
 				if (flags.HasFlag(Diferent.Deleted) && !isDid)
-					if (!File.Exists(otherTreeNode.Info.FullName) && (!Directory.Exists(otherTreeNode.Info.FullName)))
+					if (!File.Exists(otherTreeNode.Name.FullName) && (!Directory.Exists(otherTreeNode.Name.FullName)))
 					{
-						returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						returnNode = new FileSystemTreeNode(otherTreeNode.Name.FullName, null);
 						isDid = true;
 					}
 				if (flags.HasFlag(Diferent.LastModified) && !isDid)
 				{
-					if (thisTreeNode.Info.LastWriteTime > otherTreeNode.Info.LastWriteTime)
+					if (thisTreeNode.Name.LastWriteTime > otherTreeNode.Name.LastWriteTime)
 					{
-						returnNode = new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+						returnNode = new FileSystemTreeNode(thisTreeNode.Name.FullName, null);
 						isDid = true;
 					}
-					else if (thisTreeNode.Info.LastWriteTime < otherTreeNode.Info.LastWriteTime)
+					else if (thisTreeNode.Name.LastWriteTime < otherTreeNode.Name.LastWriteTime)
 					{
-						returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						returnNode = new FileSystemTreeNode(otherTreeNode.Name.FullName, null);
 						isDid = true;
 					}
 				}
 				if (flags.HasFlag(Diferent.LastCreated) && !isDid)
 				{
-					if (thisTreeNode.Info.CreationTime > otherTreeNode.Info.CreationTime)
+					if (thisTreeNode.Name.CreationTime > otherTreeNode.Name.CreationTime)
 					{
-						returnNode = new FileSystemTreeNode(thisTreeNode.Info.FullName, null);
+						returnNode = new FileSystemTreeNode(thisTreeNode.Name.FullName, null);
 						isDid = true;
 					}
-					else if (thisTreeNode.Info.CreationTime < otherTreeNode.Info.CreationTime)
+					else if (thisTreeNode.Name.CreationTime < otherTreeNode.Name.CreationTime)
 					{
-						returnNode = new FileSystemTreeNode(otherTreeNode.Info.FullName, null);
+						returnNode = new FileSystemTreeNode(otherTreeNode.Name.FullName, null);
 						isDid = true;
 					}
 				}
@@ -138,7 +138,7 @@ namespace MyLibrary
 
 			public static FileSystemTree GetDiferent(FileSystemTree first, FileSystemTree second, Diferent flags  )
 			{
-				FileSystemTree returnTree = new FileSystemTree( first._root.Info.FullName );
+				FileSystemTree returnTree = new FileSystemTree( first._root.Name.FullName );
 
 				return returnTree.GetDiferent( second, flags );
 			}
